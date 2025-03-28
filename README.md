@@ -1,22 +1,11 @@
 # Simulador de Fluxo de Caixa
 
-Exemplo de projeto usando [Vite](https://vitejs.dev/), [React](https://reactjs.org/) e [Tailwind CSS](https://tailwindcss.com/).
+Projeto com Vite + React + Tailwind CSS.
 
-## Como usar
+## Comandos
 
-1. Instale as dependências:
-   ```bash
-   npm install
-   ```
-
-2. Rode em modo de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-
-   Acesse [http://localhost:5173/](http://localhost:5173/)
-
-3. Gere o build de produção:
-   ```bash
-   npm run build
-   ```
+```bash
+npm install
+npm run dev
+npm run build
+```
