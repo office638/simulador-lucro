@@ -1,7 +1,5 @@
-export function Label({ children, ...props }) {
-  return (
-    <label className="block font-semibold mb-1" {...props}>
-      {children}
-    </label>
-  );
+import React from "react";
+
+export function Label({ children }) {
+  return <label className="block text-sm font-medium mb-1">{children}</label>;
 }
