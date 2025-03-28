@@ -8,6 +8,7 @@ export function Card({ children }) {
 }
 
 export function CardContent({ children, className = "" }) {
+  // Use aspas comuns para evitar backticks
   return (
     <div className={"p-4 " + className}>
       {children}
