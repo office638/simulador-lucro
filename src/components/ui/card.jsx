@@ -7,8 +7,9 @@ export function Card({ children }) {
 }
 
 export function CardContent({ children, className = "" }) {
+  const classes = ["p-4", className].filter(Boolean).join(" ");
   return (
-    <div className={"p-4 " + className}>
+    <div className={classes}>
       {children}
     </div>
   );
