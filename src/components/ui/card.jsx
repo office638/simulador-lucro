@@ -1,4 +1,3 @@
-// src/components/ui/card.jsx
 export function Card({ children }) {
   return (
     <div className="border rounded bg-white shadow-sm">
@@ -8,9 +7,8 @@ export function Card({ children }) {
 }
 
 export function CardContent({ children, className = "" }) {
-  // Use aspas comuns para evitar backticks
   return (
-    <div className={"p-4 " + className}>
+    <div className={\`p-4 \${className}\`}>
       {children}
     </div>
   );
