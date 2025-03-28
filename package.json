@@ -1,6 +1,7 @@
 {
   "name": "simulador-lucro",
   "version": "1.0.0",
+  "description": "Simulador de Lucro com React + Vite",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,10 +12,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.0",
-    "vite": "^4.2.0",
+    "vite": "^4.5.10",
     "@vitejs/plugin-react": "^4.0.0"
   }
 }
