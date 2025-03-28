@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function SimuladorFinanceiro() {
   const [receita, setReceita] = useState(30000);
@@ -48,48 +45,18 @@ export default function SimuladorFinanceiro() {
   const diferenca = (novo, antigo) => (((novo - antigo) / antigo) * 100).toFixed(1);
 
   return (
-    <div className="p-6 grid grid-cols-1 gap-6 max-w-5xl mx-auto">
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <h2 className="text-xl font-bold">Resumo do Fluxo de Caixa do Período</h2>
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <Label>Receita (R$)</Label>
-              <Input type="number" value={receita} onChange={e => setReceita(Number(e.target.value))} />
-            </div>
-            <div>
-              <Label>Custos Variáveis (R$)</Label>
-              <Input type="number" value={custos} onChange={e => setCustos(Number(e.target.value))} />
-            </div>
-            <div>
-              <Label>Despesas Fixas (R$)</Label>
-              <Input type="number" value={despesas} onChange={e => setDespesas(Number(e.target.value))} />
-            </div>
-            <div>
-              <Label>Investimentos (R$)</Label>
-              <Input type="number" value={investimentos} onChange={e => setInvestimentos(Number(e.target.value))} />
-            </div>
-          </div>
-          <table className="w-full text-left border-separate border-spacing-y-2 mt-6">
-            <thead>
-              <tr>
-                <th>Descrição</th>
-                <th>Média mensal</th>
-                <th>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Receita</td><td>+ {formatCurrency(receita)}</td><td>100.0%</td></tr>
-              <tr><td>Custos variáveis</td><td>- {formatCurrency(custos)}</td><td>{((custos / receita) * 100).toFixed(1)}%</td></tr>
-              <tr><td>Margem de contribuição</td><td>+ {formatCurrency(receita - custos)}</td><td>{(((receita - custos) / receita) * 100).toFixed(1)}%</td></tr>
-              <tr><td>Despesas fixas</td><td>- {formatCurrency(despesas)}</td><td>{((despesas / receita) * 100).toFixed(1)}%</td></tr>
-              <tr><td>LOAI</td><td>+ {formatCurrency(loaiOriginal)}</td><td>{((loaiOriginal / receita) * 100).toFixed(1)}%</td></tr>
-              <tr><td>Investimentos</td><td>+ {formatCurrency(investimentos)}</td><td>{((investimentos / receita) * 100).toFixed(1)}%</td></tr>
-              <tr><td>Lucro operacional</td><td>+ {formatCurrency(lucroOriginal)}</td><td>{((lucroOriginal / receita) * 100).toFixed(1)}%</td></tr>
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+    <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
+      <h2>Resumo do Fluxo de Caixa</h2>
+      <div>
+        <label>Receita (R$): <input type="number" value={receita} onChange={e => setReceita(Number(e.target.value))} /></label>
+        <label>Custos Variáveis (R$): <input type="number" value={custos} onChange={e => setCustos(Number(e.target.value))} /></label>
+        <label>Despesas Fixas (R$): <input type="number" value={despesas} onChange={e => setDespesas(Number(e.target.value))} /></label>
+        <label>Investimentos (R$): <input type="number" value={investimentos} onChange={e => setInvestimentos(Number(e.target.value))} /></label>
+      </div>
+      <hr />
+      <p>Lucro atual: {formatCurrency(lucroOriginal)}</p>
+      <p>Lucro após simulação: {formatCurrency(lucroNovo)}</p>
+      <p>Diferença: {diferencaLucro}%</p>
     </div>
   );
 }
