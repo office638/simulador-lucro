@@ -402,12 +402,6 @@ export default function SimuladorFinanceiro() {
         <div className="grid grid-cols-1 gap-6">
           {/* Provisões */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
-              Folha de Pagamento{" "}
-              <span className="font-normal text-sm text-muted-foreground">
-                (não influencia no custo fixo/variável, apenas como referência para encargos de 13º salário, férias e outros)
-              </span>
-            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Folha de Pagamento</Label>

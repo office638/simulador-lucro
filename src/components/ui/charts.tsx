@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Label } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface ChartData {
   name: string;
@@ -34,42 +34,22 @@ export function PieChartComponent({ data }: { data: ChartData[] }) {
 
 export function BarChartComponent({ data }: { data: ChartData[] }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  
-  // Transform data for stacked bar chart
-  const transformedData = [{
-    name: 'Investimentos',
-    'Ativo Imobilizado': data[0].value,
-    'Veículos': data[1].value,
-    'Estoque + Outros': data[2].value,
-    total: total
-  }];
+  const dataWithTotal = [...data, { name: 'Total Investido', value: total }];
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={transformedData}>
+      <BarChart data={dataWithTotal}>
         <XAxis dataKey="name" />
         <YAxis />
-        <Tooltip 
-          formatter={(value) => `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          labelFormatter={() => 'Investimentos'}
-        />
-        <Bar dataKey="Ativo Imobilizado" stackId="a" fill={COLORS[0]} />
-        <Bar dataKey="Veículos" stackId="a" fill={COLORS[1]} />
-        <Bar dataKey="Estoque + Outros" stackId="a" fill={COLORS[2]} />
-        <Label
-          content={({ viewBox: { x, y, width, height } }) => {
-            return (
-              <text
-                x={x + width / 2}
-                y={y - 10}
-                textAnchor="middle"
-                fill="#666"
-              >
-                {`Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
-              </text>
-            );
-          }}
-        />
+        <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+        <Bar dataKey="value" fill="#8884d8">
+          {dataWithTotal.map((entry, index) => (
+            <Cell 
+              key={`cell-${index}`} 
+              fill={index === dataWithTotal.length - 1 ? COLORS[4] : COLORS[index % (COLORS.length - 1)]} 
+            />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
