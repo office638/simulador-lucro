@@ -45,7 +45,7 @@ export const ExpandableRow: React.FC<ExpandableRowProps> = ({
             {title}
           </span>
         </td>
-        <td className={`text-right pr-6 ${amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+        <td className="text-right pr-6">
           {formatCurrency(amount)}
         </td>
         <td className="text-right pr-6">
@@ -59,7 +59,7 @@ export const ExpandableRow: React.FC<ExpandableRowProps> = ({
           <td className="pl-8 py-1">
             {detail.title}
           </td>
-          <td className={`text-right pr-6 ${detail.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+          <td className="text-right pr-6">
             {formatCurrency(detail.amount)}
           </td>
           <td className="text-right pr-6">

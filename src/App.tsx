@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
@@ -19,7 +19,13 @@ const formatCurrency = (value: number) =>
 
 export default function SimuladorFinanceiro() {
   const diagnosticoRef = useRef<HTMLDivElement>(null);
-  
+
+  // Estado para dark mode
+  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
+
   // State variables (valores base)
   const [receita, setReceita] = useState(30000);
   const [custos, setCustos] = useState(5000);
@@ -134,7 +140,7 @@ export default function SimuladorFinanceiro() {
       ['Depreciações', '', ''],
       ['- Ativo Imobilizado', depreciacaoAtivo, `${((depreciacaoAtivo/receita)*100).toFixed(1)}%`],
       ['- Veículos', depreciacaoVeiculos, `${((depreciacaoVeiculos/receita)*100).toFixed(1)}%`],
-      ['Total Depreciações', totalDepreciacoes, `${((totalDepreciacoes/receita)*100).toFixed(1)}%`],
+      ['Total Depreciações', totalDepreciacoes, `${((totalDepreciaoes/receita)*100).toFixed(1)}%`],
       ['Custo de Oportunidade', custoCapital, `${((custoCapital/receita)*100).toFixed(1)}%`],
       ['Resultado Final', resultadoFinal, `${((resultadoFinal/receita)*100).toFixed(1)}%`]
     ];
@@ -147,32 +153,22 @@ export default function SimuladorFinanceiro() {
 
   // Função para limpar todos os campos (estado base e simulação)
   const handleClearFields = () => {
-    // Resetar valores base para o que quiser como padrão
     setReceita(30000);
     setCustos(5000);
     setDespesas(18000);
     setInvestimentos(0);
-
-    // Resetar variações de simulação
     setReceitaVar(0);
     setCustosVar(0);
     setDespesasVar(0);
-
-    // Resetar provisões e depreciações
     setFolhaPagamento(10000);
     setCustoVeiculos(2000);
     setDespesaGarantia(1600);
-
     setAtivoImobilizado(100000);
     setTaxaDepreciacaoAtivo(10);
     setInvestimentoVeiculos(500000);
     setTaxaDepreciacaoVeiculos(4);
-
-    // Resetar custo de capital
     setValorInvestido(1000000);
     setTaxaReferencia(12);
-
-    // Resetar valor ideal
     setIdealPercentual(13);
   };
 
@@ -180,395 +176,409 @@ export default function SimuladorFinanceiro() {
   const diferenca = (novo: number, antigo: number) => (((novo - antigo) / antigo) * 100).toFixed(1);
 
   return (
-    <div className="p-6 grid grid-cols-1 gap-6 max-w-5xl mx-auto" ref={diagnosticoRef}>
-      
-      {/* Clareza Financeira */}
-      <CollapsibleCard title="Clareza financeira">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Diagnóstico do ISF</h2>
-          <PdfButton targetRef={diagnosticoRef} />
-        </div>
-        <div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Receita</p>
-              <p className="text-xl font-bold">{formatCurrency(receita)}</p>
-              <p className="text-muted-foreground text-xs">Média mensal</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Ponto de equilíbrio</p>
-              <p className="text-xl font-bold">{formatCurrency(((despesas + investimentos) / (1 - (custos / receita))))}</p>
-            </div>
+    <>
+      {/* Botão fixo para alternar dark mode */}
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        className="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md"
+      >
+        {darkMode ? "Modo Claro" : "Modo Escuro"}
+      </button>
+
+      {/* Container principal com classes para modo claro e escuro */}
+      <div className="p-6 grid grid-cols-1 gap-6 max-w-5xl mx-auto bg-white dark:bg-zinc-900 text-black dark:text-white" ref={diagnosticoRef}>
+        
+        {/* Clareza Financeira */}
+        <CollapsibleCard title="Clareza financeira">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Diagnóstico do ISF</h2>
+            <PdfButton targetRef={diagnosticoRef} />
           </div>
-          <div className="mt-4">
-            <p className="text-muted-foreground">Lucro</p>
-            <div className="flex items-center justify-between">
-              <p className={`text-xl font-bold ${lucroOriginal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(lucroOriginal)}
-              </p>
-              <div className="text-right">
-                {/* Campo para alterar o percentual ideal */}
-                <div className="flex items-center gap-2 mb-1">
-                  <Label>Ideal (%)</Label>
-                  <input
-                    type="number"
-                    className="border border-gray-300 rounded px-2 py-1 w-16"
-                    value={idealPercentual}
-                    onChange={(e) => setIdealPercentual(Number(e.target.value))}
-                  />
+          <div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">Receita</p>
+                <p className="text-xl font-bold">{formatCurrency(receita)}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Média mensal</p>
+              </div>
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">Ponto de equilíbrio</p>
+                <p className="text-xl font-bold">{formatCurrency(((despesas + investimentos) / (1 - (custos / receita))))}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-gray-500 dark:text-gray-400">Lucro</p>
+              <div className="flex items-center justify-between">
+                <p className={`text-xl font-bold ${lucroOriginal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(lucroOriginal)}
+                </p>
+                <div className="text-right">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Label>Ideal (%)</Label>
+                    <input
+                      type="number"
+                      className="border border-gray-300 rounded px-2 py-1 w-16 bg-white dark:bg-zinc-800 text-black dark:text-white"
+                      value={idealPercentual}
+                      onChange={(e) => setIdealPercentual(Number(e.target.value))}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Ideal: acima de {idealPercentual}%
+                  </p>
+                  <p className={`text-xl font-bold ${Number(lucroPercentual) >= idealPercentual ? 'text-green-600' : 'text-red-600'}`}>
+                    {lucroPercentual}%
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Ideal: acima de {idealPercentual}%
-                </p>
-                <p className={`text-xl font-bold ${Number(lucroPercentual) >= idealPercentual ? 'text-green-600' : 'text-red-600'}`}>
-                  {lucroPercentual}%
-                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-sm font-semibold">Índice de saúde financeira</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-sm">10</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Segurança</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Eficiência</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Tendência</div>
               </div>
             </div>
           </div>
-          <div className="mt-4">
-            <p className="text-sm font-semibold">Índice de saúde financeira</p>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-sm">10</div>
-              <div className="text-xs text-muted-foreground">Segurança</div>
-              <div className="text-xs text-muted-foreground">Eficiência</div>
-              <div className="text-xs text-muted-foreground">Tendência</div>
-            </div>
-          </div>
-        </div>
-      </CollapsibleCard>
+        </CollapsibleCard>
 
-      {/* Resumo do Fluxo de Caixa do Período (valores originais) */}
-      <CollapsibleCard title="Resumo do Fluxo de Caixa do Período">
-        <div className="grid grid-cols-4 gap-4">
-          <div>
-            <Label>Receita</Label>
-            <CurrencyInput value={receita} onChange={setReceita} />
-          </div>
-          <div>
-            <Label>Custos Variáveis</Label>
-            <CurrencyInput value={custos} onChange={setCustos} />
-          </div>
-          <div>
-            <Label>Despesas Fixas</Label>
-            <CurrencyInput value={despesas} onChange={setDespesas} />
-          </div>
-          <div>
-            <Label>Investimentos</Label>
-            <CurrencyInput value={investimentos} onChange={setInvestimentos} />
-          </div>
-        </div>
-
-        <table className="w-full text-left border-separate border-spacing-y-2 border-spacing-x-6 mt-6">
-          <thead>
-            <tr>
-              <th className="text-left">Descrição</th>
-              <th className="text-right pr-6">Média mensal</th>
-              <th className="text-right pr-6">% Receita</th>
-              <th className="text-right">Diferença</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Receita</td>
-              <td className="text-right pr-6 text-green-600 font-bold">
-                {formatCurrency(receita)}
-              </td>
-              <td className="text-right pr-6">100.0%</td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr>
-              <td>Custos variáveis</td>
-              <td className="text-right pr-6 text-red-600">
-                {formatCurrency(-custos)}
-              </td>
-              <td className="text-right pr-6">
-                {(-((custos / receita) * 100)).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr>
-              <td>Margem de contribuição</td>
-              <td className="text-right pr-6 text-green-600">
-                {formatCurrency(receita - custos)}
-              </td>
-              <td className="text-right pr-6">
-                {(((receita - custos) / receita) * 100).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr>
-              <td>Despesas fixas</td>
-              <td className="text-right pr-6 text-red-600">
-                {formatCurrency(-despesas)}
-              </td>
-              <td className="text-right pr-6">
-                {(-((despesas / receita) * 100)).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr>
-              <td>LOAI</td>
-              <td className="text-right pr-6">
-                {formatCurrency(margemOriginal - despesas)}
-              </td>
-              <td className="text-right pr-6">
-                {(((margemOriginal - despesas) / receita) * 100).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr>
-              <td>Investimentos</td>
-              <td className="text-right pr-6 text-red-600">
-                {formatCurrency(-investimentos)}
-              </td>
-              <td className="text-right pr-6">
-                {(-((investimentos / receita) * 100)).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr className={lucroOriginal >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
-              <td>Lucro operacional</td>
-              <td className="text-right pr-6">{formatCurrency(lucroOriginal)}</td>
-              <td className="text-right pr-6">{((lucroOriginal / receita) * 100).toFixed(1)}%</td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-          </tbody>
-        </table>
-      </CollapsibleCard>
-
-      {/* Simular alterações (%) */}
-      <CollapsibleCard title="Simular alterações (%)">
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label>Receita</Label>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => adjustPercentage(receitaVar, -1, setReceitaVar)}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                <Minus size={16} />
-              </button>
-              <PercentageInput value={receitaVar} onChange={setReceitaVar} />
-              <button
-                onClick={() => adjustPercentage(receitaVar, 1, setReceitaVar)}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-            <p className={`text-sm mt-1 font-bold ${impactoReceita >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(impactoReceita)}
-            </p>
-          </div>
-          <div>
-            <Label>Custos Variáveis</Label>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => adjustPercentage(custosVar, -1, setCustosVar)}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                <Minus size={16} />
-              </button>
-              <PercentageInput value={custosVar} onChange={setCustosVar} />
-              <button
-                onClick={() => adjustPercentage(custosVar, 1, setCustosVar)}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-            <p className={`text-sm mt-1 font-bold ${impactoCustos >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(impactoCustos)}
-            </p>
-          </div>
-          <div>
-            <Label>Despesas Fixas</Label>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => adjustPercentage(despesasVar, -1, setDespesasVar)}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                <Minus size={16} />
-              </button>
-              <PercentageInput value={despesasVar} onChange={setDespesasVar} />
-              <button
-                onClick={() => adjustPercentage(despesasVar, 1, setDespesasVar)}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-            <p className={`text-sm mt-1 font-bold ${impactoDespesas >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(impactoDespesas)}
-            </p>
-          </div>
-        </div>
-
-        {/* Botão para limpar todos os campos */}
-        <div className="mt-4">
-          <button
-            onClick={handleClearFields}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold"
-          >
-            Limpar Campos
-          </button>
-        </div>
-      </CollapsibleCard>
-
-      {/* Resumo do Fluxo de Caixa após as Alterações */}
-      <CollapsibleCard title="Resumo do Fluxo de Caixa após as Alterações">
-        <table className="w-full text-left border-separate border-spacing-y-2 border-spacing-x-6 mt-6">
-          <thead>
-            <tr>
-              <th className="text-left">Descrição</th>
-              <th className="text-right pr-6">Média mensal</th>
-              <th className="text-right pr-6">% Receita</th>
-              <th className="text-right">Diferença</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Receita</td>
-              <td className="text-right pr-6 text-green-600 font-bold">
-                {formatCurrency(receitaNova)}
-              </td>
-              <td className="text-right pr-6">100.0%</td>
-              <td className="text-right pr-6">{diferenca(receitaNova, receita)}%</td>
-            </tr>
-            <tr>
-              <td>Custos variáveis</td>
-              <td className="text-right pr-6 text-red-600">
-                {formatCurrency(-custosNovos)}
-              </td>
-              <td className="text-right pr-6">
-                {(-Number(percentual(custosNovos))).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">{diferenca(custosNovos, custos)}%</td>
-            </tr>
-            <tr>
-              <td>Margem de contribuição</td>
-              <td className="text-right pr-6 text-green-600">
-                {formatCurrency(margemNova)}
-              </td>
-              <td className="text-right pr-6">{Number(percentual(margemNova))}%</td>
-              <td className="text-right pr-6">{diferenca(margemNova, margemOriginal)}%</td>
-            </tr>
-            <tr>
-              <td>Despesas fixas</td>
-              <td className="text-right pr-6 text-red-600">
-                {formatCurrency(-despesasNovas)}
-              </td>
-              <td className="text-right pr-6">
-                {(-Number(percentual(despesasNovas))).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">{diferenca(despesasNovas, despesas)}%</td>
-            </tr>
-            <tr>
-              <td>LOAI</td>
-              <td className="text-right pr-6">
-                {formatCurrency(loaiNovo)}
-              </td>
-              <td className="text-right pr-6">{Number(percentual(loaiNovo))}%</td>
-              <td className="text-right pr-6">{diferenca(loaiNovo, loaiOriginal)}%</td>
-            </tr>
-            <tr>
-              <td>Investimentos</td>
-              <td className="text-right pr-6 text-red-600">
-                {formatCurrency(-investimentos)}
-              </td>
-              <td className="text-right pr-6">
-                {(-Number(percentual(investimentos))).toFixed(1)}%
-              </td>
-              <td className="text-right pr-6">0.0%</td>
-            </tr>
-            <tr className={lucroNovo >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
-              <td>Lucro operacional</td>
-              <td className="text-right pr-6">
-                {formatCurrency(lucroNovo)}
-              </td>
-              <td className="text-right pr-6">{Number(percentual(lucroNovo))}%</td>
-              <td className="text-right pr-6">{diferencaLucro}%</td>
-            </tr>
-          </tbody>
-        </table>
-        <div className={`font-bold text-right px-4 py-2 text-lg ${Number(diferencaLucro) >= 0 ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-          TOTAL DE DIFERENÇA NO LUCRO: {diferencaLucro}%
-        </div>
-      </CollapsibleCard>
-
-      {/* Provisões, Depreciações e Custo de Capital */}
-      <CollapsibleCard title="Provisões, Depreciações e Custo de Capital">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Provisões, Depreciações e Custo de Capital</h2>
-          <button
-            onClick={exportarParaExcel}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Exportar para Excel
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6">
-          {/* Provisões */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Folha de Pagamento</Label>
-                <CurrencyInput value={folhaPagamento} onChange={setFolhaPagamento} />
-              </div>
-              <div>
-                <Label>Despesa Mensal Garantia Serviço</Label>
-                <CurrencyInput value={despesaGarantia} onChange={setDespesaGarantia} />
-              </div>
-              <div>
-                <Label>Custo Mensal com Veículos</Label>
-                <CurrencyInput value={custoVeiculos} onChange={setCustoVeiculos} />
-              </div>
-            </div>
-          </div>
-
-          {/* Depreciações */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Ativo Imobilizado (CAPEX)</Label>
-                <CurrencyInput value={ativoImobilizado} onChange={setAtivoImobilizado} />
-              </div>
-              <div>
-                <Label>Depreciação Ativo Imobilizado</Label>
-                <PercentageInput value={taxaDepreciacaoAtivo} onChange={setTaxaDepreciacaoAtivo} />
-              </div>
-              <div>
-                <Label>Investimento em Veículos</Label>
-                <CurrencyInput value={investimentoVeiculos} onChange={setInvestimentoVeiculos} />
-              </div>
-              <div>
-                <Label>Depreciação Veículo</Label>
-                <PercentageInput value={taxaDepreciacaoVeiculos} onChange={setTaxaDepreciacaoVeiculos} />
-              </div>
-            </div>
-          </div>
-
-          {/* Custo de Capital */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Valor Investido em Estoque + Outros Investimentos na Empresa</Label>
-                <CurrencyInput value={valorInvestido} onChange={setValorInvestido} />
-              </div>
-              <div>
-                <Label>Taxa de Referência de Custo de Oportunidade</Label>
-                <PercentageInput value={taxaReferencia} onChange={setTaxaReferencia} />
-              </div>
-            </div>
-          </div>
-
-          {/* Gráficos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        {/* Resumo do Fluxo de Caixa do Período (valores originais) */}
+        <CollapsibleCard title="Resumo do Fluxo de Caixa do Período">
+          <div className="grid grid-cols-4 gap-4">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Distribuição CV, DF e LO</h3>
-              <PieChartComponent data={pieChartData} />
+              <Label>Receita</Label>
+              <CurrencyInput value={receita} onChange={setReceita} />
+            </div>
+            <div>
+              <Label>Custos Variáveis</Label>
+              <CurrencyInput value={custos} onChange={setCustos} />
+            </div>
+            <div>
+              <Label>Despesas Fixas</Label>
+              <CurrencyInput value={despesas} onChange={setDespesas} />
+            </div>
+            <div>
+              <Label>Investimentos</Label>
+              <CurrencyInput value={investimentos} onChange={setInvestimentos} />
+            </div>
+          </div>
+
+          <table className="w-full text-left border-separate border-spacing-y-2 border-spacing-x-6 mt-6">
+            <thead>
+              <tr>
+                <th className="text-left">Descrição</th>
+                <th className="text-right pr-6">Média mensal</th>
+                <th className="text-right pr-6">% Receita</th>
+                <th className="text-right">Diferença</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Receita</td>
+                <td className="text-right pr-6 text-green-600 font-bold">
+                  {formatCurrency(receita)}
+                </td>
+                <td className="text-right pr-6">100.0%</td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr>
+                <td>Custos variáveis</td>
+                <td className="text-right pr-6 text-red-600">
+                  {formatCurrency(-custos)}
+                </td>
+                <td className="text-right pr-6">
+                  {(-((custos / receita) * 100)).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr>
+                <td>Margem de contribuição</td>
+                <td className="text-right pr-6 text-green-600">
+                  {formatCurrency(receita - custos)}
+                </td>
+                <td className="text-right pr-6">
+                  {(((receita - custos) / receita) * 100).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr>
+                <td>Despesas fixas</td>
+                <td className="text-right pr-6 text-red-600">
+                  {formatCurrency(-despesas)}
+                </td>
+                <td className="text-right pr-6">
+                  {(-((despesas / receita) * 100)).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr>
+                <td>LOAI</td>
+                <td className="text-right pr-6">
+                  {formatCurrency(margemOriginal - despesas)}
+                </td>
+                <td className="text-right pr-6">
+                  {(((margemOriginal - despesas) / receita) * 100).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr>
+                <td>Investimentos</td>
+                <td className="text-right pr-6 text-red-600">
+                  {formatCurrency(-investimentos)}
+                </td>
+                <td className="text-right pr-6">
+                  {(-((investimentos / receita) * 100)).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr className={lucroOriginal >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+                <td>Lucro operacional</td>
+                <td className="text-right pr-6">{formatCurrency(lucroOriginal)}</td>
+                <td className="text-right pr-6">{((lucroOriginal / receita) * 100).toFixed(1)}%</td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+            </tbody>
+          </table>
+        </CollapsibleCard>
+
+        {/* Simular alterações (%) */}
+        <CollapsibleCard title="Simular alterações (%)">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label>Receita</Label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => adjustPercentage(receitaVar, -1, setReceitaVar)}
+                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                >
+                  <Minus size={16} />
+                </button>
+                <PercentageInput value={receitaVar} onChange={setReceitaVar} />
+                <button
+                  onClick={() => adjustPercentage(receitaVar, 1, setReceitaVar)}
+                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <p className={`text-sm mt-1 font-bold ${impactoReceita >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(impactoReceita)}
+              </p>
+            </div>
+            <div>
+              <Label>Custos Variáveis</Label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => adjustPercentage(custosVar, -1, setCustosVar)}
+                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                >
+                  <Minus size={16} />
+                </button>
+                <PercentageInput value={custosVar} onChange={setCustosVar} />
+                <button
+                  onClick={() => adjustPercentage(custosVar, 1, setCustosVar)}
+                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <p className={`text-sm mt-1 font-bold ${impactoCustos >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(impactoCustos)}
+              </p>
+            </div>
+            <div>
+              <Label>Despesas Fixas</Label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => adjustPercentage(despesasVar, -1, setDespesasVar)}
+                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                >
+                  <Minus size={16} />
+                </button>
+                <PercentageInput value={despesasVar} onChange={setDespesasVar} />
+                <button
+                  onClick={() => adjustPercentage(despesasVar, 1, setDespesasVar)}
+                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <p className={`text-sm mt-1 font-bold ${impactoDespesas >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(impactoDespesas)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <button
+              onClick={handleClearFields}
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-semibold"
+            >
+              Limpar Campos
+            </button>
+          </div>
+        </CollapsibleCard>
+
+        {/* Resumo do Fluxo de Caixa após as Alterações */}
+        <CollapsibleCard title="Resumo do Fluxo de Caixa após as Alterações">
+          <table className="w-full text-left border-separate border-spacing-y-2 border-spacing-x-6 mt-6">
+            <thead>
+              <tr>
+                <th className="text-left">Descrição</th>
+                <th className="text-right pr-6">Média mensal</th>
+                <th className="text-right pr-6">% Receita</th>
+                <th className="text-right">Diferença</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Receita</td>
+                <td className="text-right pr-6 text-green-600 font-bold">
+                  {formatCurrency(receitaNova)}
+                </td>
+                <td className="text-right pr-6">100.0%</td>
+                <td className="text-right pr-6">{diferenca(receitaNova, receita)}%</td>
+              </tr>
+              <tr>
+                <td>Custos variáveis</td>
+                <td className="text-right pr-6 text-red-600">
+                  {formatCurrency(-custosNovos)}
+                </td>
+                <td className="text-right pr-6">
+                  {(-Number(percentual(custosNovos))).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">{diferenca(custosNovos, custos)}%</td>
+              </tr>
+              <tr>
+                <td>Margem de contribuição</td>
+                <td className="text-right pr-6 text-green-600">
+                  {formatCurrency(margemNova)}
+                </td>
+                <td className="text-right pr-6">{Number(percentual(margemNova))}%</td>
+                <td className="text-right pr-6">{diferenca(margemNova, margemOriginal)}%</td>
+              </tr>
+              <tr>
+                <td>Despesas fixas</td>
+                <td className="text-right pr-6 text-red-600">
+                  {formatCurrency(-despesasNovas)}
+                </td>
+                <td className="text-right pr-6">
+                  {(-Number(percentual(despesasNovas))).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">{diferenca(despesasNovas, despesas)}%</td>
+              </tr>
+              <tr>
+                <td>LOAI</td>
+                <td className="text-right pr-6">
+                  {formatCurrency(loaiNovo)}
+                </td>
+                <td className="text-right pr-6">{Number(percentual(loaiNovo))}%</td>
+                <td className="text-right pr-6">{diferenca(loaiNovo, loaiOriginal)}%</td>
+              </tr>
+              <tr>
+                <td>Investimentos</td>
+                <td className="text-right pr-6 text-red-600">
+                  {formatCurrency(-investimentos)}
+                </td>
+                <td className="text-right pr-6">
+                  {(-Number(percentual(investimentos))).toFixed(1)}%
+                </td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+              <tr className={lucroOriginal >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+                <td>Lucro operacional</td>
+                <td className="text-right pr-6">{formatCurrency(lucroOriginal)}</td>
+                <td className="text-right pr-6">{((lucroOriginal / receita) * 100).toFixed(1)}%</td>
+                <td className="text-right pr-6">0.0%</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className={`font-bold text-right px-4 py-2 text-lg ${Number(diferencaLucro) >= 0 ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+            TOTAL DE DIFERENÇA NO LUCRO: {diferencaLucro}%
+          </div>
+        </CollapsibleCard>
+
+        {/* Provisões, Depreciações e Custo de Capital */}
+        <CollapsibleCard title="Provisões, Depreciações e Custo de Capital">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">Provisões, Depreciações e Custo de Capital</h2>
+            <button
+              onClick={exportarParaExcel}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Exportar para Excel
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {/* Provisões */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Folha de Pagamento</Label>
+                  <CurrencyInput value={folhaPagamento} onChange={setFolhaPagamento} />
+                </div>
+                <div>
+                  <Label>Despesa Mensal Garantia Serviço</Label>
+                  <CurrencyInput value={despesaGarantia} onChange={setDespesaGarantia} />
+                </div>
+                <div>
+                  <Label>Custo Mensal com Veículos</Label>
+                  <CurrencyInput value={custoVeiculos} onChange={setCustoVeiculos} />
+                </div>
+              </div>
+            </div>
+
+            {/* Depreciações */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Ativo Imobilizado (CAPEX)</Label>
+                  <CurrencyInput value={ativoImobilizado} onChange={setAtivoImobilizado} />
+                </div>
+                <div>
+                  <Label>Depreciação Ativo Imobilizado</Label>
+                  <PercentageInput value={taxaDepreciacaoAtivo} onChange={setTaxaDepreciacaoAtivo} />
+                </div>
+                <div>
+                  <Label>Investimento em Veículos</Label>
+                  <CurrencyInput value={investimentoVeiculos} onChange={setInvestimentoVeiculos} />
+                </div>
+                <div>
+                  <Label>Depreciação Veículo</Label>
+                  <PercentageInput value={taxaDepreciacaoVeiculos} onChange={setTaxaDepreciacaoVeiculos} />
+                </div>
+              </div>
+            </div>
+
+            {/* Custo de Capital */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Valor Investido em Estoque + Outros Investimentos na Empresa</Label>
+                  <CurrencyInput value={valorInvestido} onChange={setValorInvestido} />
+                </div>
+                <div>
+                  <Label>Taxa de Referência de Custo de Oportunidade</Label>
+                  <PercentageInput value={taxaReferencia} onChange={setTaxaReferencia} />
+                </div>
+              </div>
+            </div>
+
+           {/* Gráficos */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">
+                Distribuição: Custo Variável, Despesa Fixa e Lucro Operacional
+              </h3>
+              <PieChartComponent 
+                data={[
+                  { name: 'Custo Variável', value: custos },
+                  { name: 'Despesa Fixa', value: despesas },
+                  { name: 'Lucro Operacional', value: lucroOriginal }
+                ]}
+              />
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Investimentos</h3>
@@ -586,6 +596,7 @@ export default function SimuladorFinanceiro() {
                 </tr>
               </thead>
               <tbody>
+
                 {/* Lucro Operacional */}
                 <tr className={`font-bold ${lucroOriginal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   <td>Lucro Operacional</td>
@@ -707,5 +718,6 @@ export default function SimuladorFinanceiro() {
         </div>
       </div>
     </div>
+    </>
   );
 }

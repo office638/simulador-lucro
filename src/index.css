@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Variáveis para modo claro */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -25,9 +26,19 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
   }
-}
-
-@layer base {
+  
+  /* Sob dark mode, ao adicionar a classe 'dark' no elemento raiz, esses valores serão aplicados */
+  .dark {
+    --background: 222.2 84% 4.9%; /* fundo escuro */
+    --foreground: 0 0% 100%;      /* texto claro */
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 100%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 100%;
+    /* Você pode ajustar as outras variáveis conforme sua paleta desejada */
+  }
+  
+  /* Exemplo de uso das variáveis para estilizar elementos básicos */
   * {
     @apply border-border;
   }
