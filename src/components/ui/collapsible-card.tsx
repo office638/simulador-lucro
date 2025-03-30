@@ -1,32 +1,39 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from './card';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 
 interface CollapsibleCardProps {
   title: string;
   children: React.ReactNode;
-  defaultExpanded?: boolean;
+  showComparison?: boolean;
 }
 
-export function CollapsibleCard({ title, children, defaultExpanded = true }: CollapsibleCardProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+export function CollapsibleCard({ title, children, showComparison = false }: CollapsibleCardProps) {
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <Card className="card page-break-inside-avoid">
-      <div className="p-4 border-b">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between text-xl font-bold"
-        >
-          {title}
-          {isExpanded ? <ChevronDown size={24} /> : <ChevronRight size={24} />}
-        </button>
+    <Card>
+      <div
+        className="p-6 flex justify-between items-center cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          {showComparison && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <span>Atual</span>
+              <ArrowRight className="h-4 w-4 mx-1" />
+              <span>Projetado</span>
+            </div>
+          )}
+        </div>
+        {isOpen ? (
+          <ChevronUp className="h-5 w-5" />
+        ) : (
+          <ChevronDown className="h-5 w-5" />
+        )}
       </div>
-      {isExpanded && (
-        <CardContent className="print:block">
-          {children}
-        </CardContent>
-      )}
+      {isOpen && <CardContent>{children}</CardContent>}
     </Card>
   );
 }

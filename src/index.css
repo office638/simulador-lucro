@@ -35,35 +35,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-@media print {
-  .page-break-inside-avoid {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-  
-  .page-break-before {
-    page-break-before: always !important;
-    break-before: always !important;
-  }
-
-  table {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  .card {
-    margin-top: 20px !important;
-    margin-bottom: 25px !important;
-  }
-
-  /* Ensure collapsed content is visible in PDF */
-  .print\:block {
-    display: block !important;
-  }
-}
