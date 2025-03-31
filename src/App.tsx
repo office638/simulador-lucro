@@ -17,6 +17,43 @@ const formatCurrency = (value: number) =>
     ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     : 'R$ 0,00';
 
+/**
+ * Substitui NaN% por "0.0%" caso base seja 0 ou cálculo inválido.
+ */
+const formatPercentage = (value: number, base: number) => {
+  if (!isFinite(value) || !isFinite(base) || base === 0) {
+    return '0.0%';
+  }
+  const result = (value / base) * 100;
+  if (isNaN(result)) {
+    return '0.0%';
+  }
+  return `${result.toFixed(1)}%`;
+};
+
+/**
+ * Para exibir valores em %.toFixed(0) sem gerar NaN% quando base=0.
+ */
+function safeFixed0(numerador: number, denominador: number) {
+  if (!isFinite(numerador) || !isFinite(denominador) || denominador === 0) {
+    return '0';
+  }
+  const res = (numerador / denominador) * 100;
+  if (isNaN(res)) {
+    return '0';
+  }
+  return res.toFixed(0);
+}
+
+const calcularIndiceSaudeFinanceira = (lucro: number, custos: number, despesas: number, investimentos: number) => {
+  // Total de custos (custos variáveis + despesas fixas + investimentos)
+  const custoTotal = custos + despesas + investimentos;
+  if (custoTotal === 0) return 0;
+  const proporcao = lucro / custoTotal;
+  const nota = Math.max(0, Math.min(10, (proporcao / 3) * 10));
+  return Number(nota.toFixed(1));
+};
+
 export default function SimuladorFinanceiro() {
   const diagnosticoRef = useRef<HTMLDivElement>(null);
 
@@ -31,6 +68,14 @@ export default function SimuladorFinanceiro() {
   const [custos, setCustos] = useState(5000);
   const [despesas, setDespesas] = useState(18000);
   const [investimentos, setInvestimentos] = useState(0);
+
+  // Função para limpar os campos do "Resumo do Fluxo de Caixa do Período"
+  const handleClearResumoFields = () => {
+    setReceita(0);
+    setCustos(0);
+    setDespesas(0);
+    setInvestimentos(0);
+  };
 
   // Variáveis de simulação (variação em %)
   const [receitaVar, setReceitaVar] = useState(0);
@@ -85,9 +130,10 @@ export default function SimuladorFinanceiro() {
   const impactoCustos = custosVar !== 0 ? -(custosNovos - custos) : 0;
   const impactoDespesas = despesasVar !== 0 ? -(despesasNovas - despesas) : 0;
 
-  const diferencaLucro = lucroOriginal !== 0 
-    ? (((lucroNovo - lucroOriginal) / Math.abs(lucroOriginal)) * 100).toFixed(1)
-    : '0.0';
+  const diferencaLucro =
+    lucroOriginal !== 0
+      ? (((lucroNovo - lucroOriginal) / Math.abs(lucroOriginal)) * 100).toFixed(1)
+      : '0.0';
 
   // Provisões
   const provisaoPessoal = folhaPagamento * (0.0833 + 0.1111 + 0.28);
@@ -111,7 +157,9 @@ export default function SimuladorFinanceiro() {
   const margemContribuicaoUnitaria = 1 - custosPorcentagem;
   const custosFixosTotais = despesas + investimentos;
   const pontoEquilibrio = custosFixosTotais / margemContribuicaoUnitaria;
-  const lucroPercentual = ((lucroOriginal / receita) * 100).toFixed(0);
+  const lucroPercentual = isFinite((lucroOriginal / receita) * 100) && receita !== 0
+    ? ((lucroOriginal / receita) * 100).toFixed(0)
+    : '0';
 
   // Dados para gráficos
   const pieChartData = [
@@ -131,18 +179,18 @@ export default function SimuladorFinanceiro() {
     const dados = [
       ['Descrição', 'Valor Mensal', '%Receita'],
       ['Receita', receita, '100%'],
-      ['Lucro Operacional', lucroOriginal, `${((lucroOriginal/receita)*100).toFixed(1)}%`],
+      ['Lucro Operacional', lucroOriginal, formatPercentage(lucroOriginal, receita)],
       ['Provisões', '', ''],
-      ['- Pessoal', provisaoPessoal, `${((provisaoPessoal/receita)*100).toFixed(1)}%`],
-      ['- Manutenção', provisaoManutencao, `${((provisaoManutencao/receita)*100).toFixed(1)}%`],
-      ['- Garantias', provisaoGarantia, `${((provisaoGarantia/receita)*100).toFixed(1)}%`],
-      ['Total Provisões', totalProvisoes, `${((totalProvisoes/receita)*100).toFixed(1)}%`],
+      ['- Pessoal', provisaoPessoal, formatPercentage(provisaoPessoal, receita)],
+      ['- Manutenção', provisaoManutencao, formatPercentage(provisaoManutencao, receita)],
+      ['- Garantias', provisaoGarantia, formatPercentage(provisaoGarantia, receita)],
+      ['Total Provisões', totalProvisoes, formatPercentage(totalProvisoes, receita)],
       ['Depreciações', '', ''],
-      ['- Ativo Imobilizado', depreciacaoAtivo, `${((depreciacaoAtivo/receita)*100).toFixed(1)}%`],
-      ['- Veículos', depreciacaoVeiculos, `${((depreciacaoVeiculos/receita)*100).toFixed(1)}%`],
-      ['Total Depreciações', totalDepreciacoes, `${((totalDepreciacoes/receita)*100).toFixed(1)}%`],
-      ['Custo de Oportunidade', custoCapital, `${((custoCapital/receita)*100).toFixed(1)}%`],
-      ['Resultado Final', resultadoFinal, `${((resultadoFinal/receita)*100).toFixed(1)}%`]
+      ['- Ativo Imobilizado', depreciacaoAtivo, formatPercentage(depreciacaoAtivo, receita)],
+      ['- Veículos', depreciacaoVeiculos, formatPercentage(depreciacaoVeiculos, receita)],
+      ['Total Depreciações', totalDepreciacoes, formatPercentage(totalDepreciacoes, receita)],
+      ['Custo de Oportunidade', custoCapital, formatPercentage(custoCapital, receita)],
+      ['Resultado Final', resultadoFinal, formatPercentage(resultadoFinal, receita)]
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(dados);
@@ -151,119 +199,172 @@ export default function SimuladorFinanceiro() {
     XLSX.writeFile(wb, 'relatorio-financeiro.xlsx');
   };
 
+  // Botão para limpar os campos de provisões, depreciações e custo de capital
+  const handleClearProvisoesDepreciacoes = () => {
+    setFolhaPagamento(0);
+    setDespesaGarantia(0);
+    setCustoVeiculos(0);
+    setAtivoImobilizado(0);
+    setTaxaDepreciacaoAtivo(0);
+    setInvestimentoVeiculos(0);
+    setTaxaDepreciacaoVeiculos(0);
+    setValorInvestido(0);
+    setTaxaReferencia(0);
+  };
+
   // Função para limpar todos os campos (estado base e simulação)
   const handleClearFields = () => {
-    setReceita(30000);
-    setCustos(5000);
-    setDespesas(18000);
+    setReceita(0);
+    setCustos(0);
+    setDespesas(0);
     setInvestimentos(0);
     setReceitaVar(0);
     setCustosVar(0);
     setDespesasVar(0);
-    setFolhaPagamento(10000);
-    setCustoVeiculos(2000);
-    setDespesaGarantia(1600);
-    setAtivoImobilizado(100000);
-    setTaxaDepreciacaoAtivo(10);
-    setInvestimentoVeiculos(500000);
-    setTaxaDepreciacaoVeiculos(4);
-    setValorInvestido(1000000);
-    setTaxaReferencia(12);
-    setIdealPercentual(13);
+    setFolhaPagamento(0);
+    setCustoVeiculos(0);
+    setDespesaGarantia(0);
+    setAtivoImobilizado(0);
+    setTaxaDepreciacaoAtivo(0);
+    setInvestimentoVeiculos(0);
+    setTaxaDepreciacaoVeiculos(0);
+    setValorInvestido(0);
+    setTaxaReferencia(0);
+    setIdealPercentual(0);
   };
 
-  const percentual = (valor: number) => ((valor / receitaNova) * 100).toFixed(1);
-  const diferenca = (novo: number, antigo: number) => (((novo - antigo) / antigo) * 100).toFixed(1);
+  /**
+   * Se receitaNova for zero ou inválida, retorna "0.0".
+   * Caso contrário, retorna valor calculado em até 1 casa decimal.
+   */
+  const percentual = (valor: number) => {
+    if (!isFinite(receitaNova) || receitaNova === 0 || !isFinite(valor)) {
+      return '0.0';
+    }
+    const calc = (valor / receitaNova) * 100;
+    if (isNaN(calc)) {
+      return '0.0';
+    }
+    return calc.toFixed(1);
+  };
+
+  /**
+   * Se antigo for zero ou inválido, retorna "0.0".
+   * Caso contrário, retorna diferença em %.
+   */
+  const diferenca = (novo: number, antigo: number) => {
+    if (!isFinite(novo) || !isFinite(antigo) || antigo === 0) {
+      return '0.0';
+    }
+    const calc = ((novo - antigo) / antigo) * 100;
+    if (isNaN(calc)) {
+      return '0.0';
+    }
+    return calc.toFixed(1);
+  };
+
+  // ====== INÍCIO DAS MELHORIAS PEDIDAS ======
+
+  // 1) Reorganizar Clareza Financeira: deixamos mais compacta.
+  // 2) Renomear e mover botão PDF para "Gerar Diagnostico" no final.
+  // 3) Rotacionar e alinhar labels do gráfico de barras no BarChart.
 
   return (
     <>
       {/* Botão fixo para alternar dark mode com ícones */}
-     <button
-  onClick={() => setDarkMode(!darkMode)}
-  className="
-    fixed top-4 right-4 z-50 p-2 rounded shadow-md
-    bg-white dark:bg-zinc-800
-    hover:bg-gray-100 dark:hover:bg-zinc-700
-    transition-colors
-  "
->
-  {darkMode ? (
-    <Sun className="w-5 h-5 text-yellow-400" />
-  ) : (
-    <Moon className="w-5 h-5 text-blue-400" />
-  )}
-</button>
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        className="
+          fixed top-4 right-4 z-50 p-2 rounded shadow-md
+          bg-white dark:bg-zinc-800
+          hover:bg-gray-100 dark:hover:bg-zinc-700
+          transition-colors
+        "
+      >
+        {darkMode ? (
+          <Sun className="w-5 h-5 text-yellow-400" />
+        ) : (
+          <Moon className="w-5 h-5 text-blue-400" />
+        )}
+      </button>
 
       {/* Container principal responsivo – o fundo é definido pelo body (branco) */}
       <div
         ref={diagnosticoRef}
         className="p-4 sm:p-6 md:p-8 grid gap-6 max-w-5xl mx-auto text-black dark:text-white transition-colors"
       >
-        {/* Clareza Financeira */}
+        {/* Clareza Financeira (reorganizado/compacto) */}
         <CollapsibleCard title="Clareza financeira">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-9 dark:text-gray-1000">Diagnóstico do ISF</h2>
-            <PdfButton targetRef={diagnosticoRef} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Bloco 1: Receita */}
+            <div className="bg-transparent dark:bg-zinc-80 p-4 rounded space-y-1">
+              <p className="font-semibold">Receita</p>
+              <p className="text-xl font-bold">
+                {formatCurrency(receita)}
+              </p>
+              <p className="text-xs">Média mensal</p>
+            </div>
+            {/* Bloco 2: Ponto de equilíbrio */}
+            <div className="bg-transparent dark:bg-zinc-80 p-4 rounded space-y-1">
+              <p className="font-semibold">Ponto de equilíbrio</p>
+              <p className="text-xl font-bold">
+                {formatCurrency((despesas + investimentos) / (1 - (custos / receita)))}
+              </p>
+              <p className="text-xs">Receita mínima para não ter prejuízo</p>
+            </div>
+            {/* Bloco 3: Lucro */}
+            <div className="bg-transparent dark:bg-zinc-80 p-4 rounded space-y-1">
+              <p className="font-semibold">Lucro</p>
+              <p className={`text-xl font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {formatCurrency(lucroOriginal)}
+              </p>
+              <p className="text-xs">
+                Ideal acima de {idealPercentual}%
+              </p>
+            </div>
           </div>
-          <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-9 dark:text-gray-1000">Receita</p>
-                <p className="text-xl font-bold text-gray-9 dark:text-gray-1000">
-                  {formatCurrency(receita)}
-                </p>
-                <p className="text-xs text-gray-9 dark:text-gray-1000">Média mensal</p>
-              </div>
-              <div>
-                <p className="text-gray-9 dark:text-gray-1000">Ponto de equilíbrio</p>
-                <p className="text-xl font-bold text-gray-9 dark:text-gray-1000">
-                  {formatCurrency((despesas + investimentos) / (1 - (custos / receita)))}
-                </p>
-              </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            {/* Campo Ideal (%) + Exibição */}
+            <div className="flex items-center gap-2">
+              <Label>Ideal (%)</Label>
+              <input
+                type="number"
+                className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-16 bg-white text-black"
+                value={idealPercentual}
+                onChange={(e) => setIdealPercentual(Number(e.target.value))}
+              />
+              <p
+                className={`text-xl font-bold ${
+                  Number(lucroPercentual) >= idealPercentual
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {lucroPercentual}%
+              </p>
             </div>
-          <div className="mt-4">
-  <div className="flex flex-col">
-    <p className="text-gray-500 mb-1">Lucro</p>
-    <p className={`text-xl font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
-      {formatCurrency(lucroOriginal)}
-    </p>
-  </div>
-  <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end mt-2">
-    <div className="text-right">
-      <div className="flex items-center gap-2 mb-1 justify-end">
-        <Label>Ideal (%)</Label>
-        <input
-          type="number"
-          className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-16 bg-white text-black"
-          value={idealPercentual}
-          onChange={(e) => setIdealPercentual(Number(e.target.value))}
-        />
-      </div>
-      <p className="text-sm text-gray-500">
-        Ideal: acima de {idealPercentual}%
-      </p>
-      <p className={`text-xl font-bold ${Number(lucroPercentual) >= idealPercentual ? "text-green-600" : "text-red-600"}`}>
-        {lucroPercentual}%
-      </p>
-    </div>
-  </div>
-</div>
-            <div className="mt-2">
-              <p className="text-sm font-semibold">Índice de saúde financeira</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-sm">
-                  10
-                </div>
-                <div className="text-xs text-gray-500">Segurança</div>
-                <div className="text-xs text-gray-500">Eficiência</div>
-                <div className="text-xs text-gray-500">Tendência</div>
-              </div>
-            </div>
+
+            {/* Botão para limpar todos os campos */}
+            <button
+              onClick={handleClearFields}
+              className="
+                px-4 py-2
+                rounded
+                font-semibold
+                transition-colors
+                bg-gray-200 hover:bg-gray-300 text-black
+                dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
+              "
+            >
+              Limpar Todos os Campos
+            </button>
           </div>
         </CollapsibleCard>
 
         {/* Resumo do Fluxo de Caixa do Período */}
         <CollapsibleCard title="Resumo do Fluxo de Caixa do Período">
+          {/* (Mantemos exatamente todo o seu código dessa seção) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <Label>Receita</Label>
@@ -282,7 +383,25 @@ export default function SimuladorFinanceiro() {
               <CurrencyInput value={investimentos} onChange={setInvestimentos} />
             </div>
           </div>
-
+          <div className="mt-4">
+            <button
+              onClick={handleClearResumoFields}
+              className="
+                px-4 py-2
+                rounded
+                font-semibold
+                transition-colors
+                
+                /* Modo claro */
+                bg-gray-200 hover:bg-gray-300 text-black
+                
+                /* Modo escuro */
+                dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
+              "
+            >
+              Limpar Campos
+            </button>
+          </div>
           {/* Container da tabela: overflow horizontal apenas em telas pequenas */}
           <div className="overflow-x-auto md:overflow-x-visible max-w-full mt-6">
             <table className="w-full text-left border-separate border-spacing-y-2 border-spacing-x-2 sm:border-spacing-x-4 md:border-spacing-x-6">
@@ -295,6 +414,7 @@ export default function SimuladorFinanceiro() {
                 </tr>
               </thead>
               <tbody>
+                {/* ... Mantemos todas as linhas da tabela ... */}
                 <tr>
                   <td>Receita</td>
                   <td className="text-right pr-2 sm:pr-6 text-green-600 font-bold">
@@ -326,7 +446,9 @@ export default function SimuladorFinanceiro() {
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
                     {formatCurrency(-despesasNovas)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">{(-Number(percentual(despesasNovas))).toFixed(1)}%</td>
+                  <td className="text-right pr-2 sm:pr-6">
+                    {(-Number(percentual(despesasNovas))).toFixed(1)}%
+                  </td>
                   <td className="text-right pr-2 sm:pr-6">{diferenca(despesasNovas, despesas)}%</td>
                 </tr>
                 <tr>
@@ -342,10 +464,18 @@ export default function SimuladorFinanceiro() {
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
                     {formatCurrency(-investimentos)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">{(-Number(percentual(investimentos))).toFixed(1)}%</td>
+                  <td className="text-right pr-2 sm:pr-6">
+                    {(-Number(percentual(investimentos))).toFixed(1)}%
+                  </td>
                   <td className="text-right pr-2 sm:pr-6">0.0%</td>
                 </tr>
-                <tr className={lucroOriginal >= 0 ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                <tr
+                  className={
+                    lucroOriginal >= 0
+                      ? "text-green-600 font-bold"
+                      : "text-red-600 font-bold"
+                  }
+                >
                   <td>Lucro operacional</td>
                   <td className="text-right pr-2 sm:pr-6">{formatCurrency(lucroNovo)}</td>
                   <td className="text-right pr-2 sm:pr-6">{Number(percentual(lucroNovo))}%</td>
@@ -376,7 +506,11 @@ export default function SimuladorFinanceiro() {
                   <Plus size={16} />
                 </button>
               </div>
-              <p className={`text-sm mt-1 font-bold ${impactoReceita >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`text-sm mt-1 font-bold ${
+                  impactoReceita >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 {formatCurrency(impactoReceita)}
               </p>
             </div>
@@ -397,7 +531,11 @@ export default function SimuladorFinanceiro() {
                   <Plus size={16} />
                 </button>
               </div>
-              <p className={`text-sm mt-1 font-bold ${impactoCustos >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`text-sm mt-1 font-bold ${
+                  impactoCustos >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 {formatCurrency(impactoCustos)}
               </p>
             </div>
@@ -418,29 +556,14 @@ export default function SimuladorFinanceiro() {
                   <Plus size={16} />
                 </button>
               </div>
-              <p className={`text-sm mt-1 font-bold ${impactoDespesas >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`text-sm mt-1 font-bold ${
+                  impactoDespesas >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 {formatCurrency(impactoDespesas)}
               </p>
             </div>
-          </div>
-          <div className="mt-4">
-           <button
-  onClick={handleClearFields}
-  className="
-    px-4 py-2
-    rounded
-    font-semibold
-    transition-colors
-
-    /* Modo claro */
-    bg-gray-200 hover:bg-gray-300 text-black
-
-    /* Modo escuro */
-    dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
-  "
->
-  Limpar Campos
-</button>
           </div>
         </CollapsibleCard>
 
@@ -488,7 +611,9 @@ export default function SimuladorFinanceiro() {
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
                     {formatCurrency(-despesasNovas)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">{(-Number(percentual(despesasNovas))).toFixed(1)}%</td>
+                  <td className="text-right pr-2 sm:pr-6">
+                    {(-Number(percentual(despesasNovas))).toFixed(1)}%
+                  </td>
                   <td className="text-right pr-2 sm:pr-6">{diferenca(despesasNovas, despesas)}%</td>
                 </tr>
                 <tr>
@@ -504,10 +629,18 @@ export default function SimuladorFinanceiro() {
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
                     {formatCurrency(-investimentos)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">{(-Number(percentual(investimentos))).toFixed(1)}%</td>
+                  <td className="text-right pr-2 sm:pr-6">
+                    {(-Number(percentual(investimentos))).toFixed(1)}%
+                  </td>
                   <td className="text-right pr-2 sm:pr-6">0.0%</td>
                 </tr>
-                <tr className={lucroOriginal >= 0 ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                <tr
+                  className={
+                    lucroOriginal >= 0
+                      ? "text-green-600 font-bold"
+                      : "text-red-600 font-bold"
+                  }
+                >
                   <td>Lucro operacional</td>
                   <td className="text-right pr-2 sm:pr-6">{formatCurrency(lucroNovo)}</td>
                   <td className="text-right pr-2 sm:pr-6">{Number(percentual(lucroNovo))}%</td>
@@ -516,21 +649,33 @@ export default function SimuladorFinanceiro() {
               </tbody>
             </table>
           </div>
-          <div className={`font-bold text-right px-4 py-2 text-lg ${Number(diferencaLucro) >= 0 ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
+          <div
+            className={`font-bold text-right px-4 py-2 text-lg ${
+              Number(diferencaLucro) >= 0 ? "bg-green-600 text-white" : "bg-red-600 text-white"
+            }`}
+          >
             TOTAL DE DIFERENÇA NO LUCRO: {diferencaLucro}%
           </div>
         </CollapsibleCard>
 
         {/* Provisões, Depreciações e Custo de Capital */}
-        <CollapsibleCard title="Provisões, Depreciações e Custo de Capital">
+        <CollapsibleCard title="">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">Provisões, Depreciações e Custo de Capital</h2>
-            <button
-              onClick={exportarParaExcel}
-              className="mt-4 md:mt-0 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
-            >
-              Exportar para Excel
-            </button>
+            <div className="flex gap-2 mt-4 md:mt-0">
+              <button
+                onClick={exportarParaExcel}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+              >
+                Exportar para Excel
+              </button>
+              <button
+                onClick={handleClearProvisoesDepreciacoes}
+                className="bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow"
+              >
+                Limpar Campos
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
@@ -604,7 +749,28 @@ export default function SimuladorFinanceiro() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-4">Investimentos</h3>
-                <BarChartComponent data={barChartData} />
+                {/*
+                  AQUI aplicamos a rotação no eixo X do BarChart, evitando cortes de texto.
+                  Caso seu BarChartComponent aceite props do Recharts, podemos fazer algo como:
+
+                  <BarChartComponent
+                    data={barChartData}
+                    xAxisProps={{
+                      angle: -45,
+                      textAnchor: "end",
+                      interval: 0,
+                    }}
+                  />
+                */}
+                <BarChartComponent
+                  data={barChartData}
+                  // Exemplo: se seu BarChartComponent permitir passarmos xAxisProps
+                  xAxisProps={{
+                    angle: -45,
+                    textAnchor: "end",
+                    interval: 0,
+                  }}
+                />
               </div>
             </div>
 
@@ -619,33 +785,40 @@ export default function SimuladorFinanceiro() {
                 </thead>
                 <tbody>
                   {/* Lucro Operacional */}
-                  <tr className={`font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <tr
+                    className={`font-bold ${
+                      lucroOriginal >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
                     <td>Lucro Operacional</td>
-                    <td className="text-right pr-2 sm:pr-6">{formatCurrency(lucroOriginal)}</td>
-                    <td className="text-right pr-2 sm:pr-6">{((lucroOriginal/receita)*100).toFixed(1)}%</td>
+                    <td className="text-right pr-2 sm:pr-6">
+                      {formatCurrency(lucroOriginal)}
+                    </td>
+                    <td className="text-right pr-2 sm:pr-6">
+                      {formatPercentage(lucroOriginal, receita)}
+                    </td>
                   </tr>
-                  
                   {/* ExpandableRow - Total de Provisões */}
                   <ExpandableRow
                     title="Total de Provisões"
                     amount={-totalProvisoes}
-                    percentage={(totalProvisoes / receita) * 100}
+                    percentage={parseFloat(safeFixed0(totalProvisoes, receita))}
                     className="text-red-600"
                     details={[
                       {
                         title: "Provisão de Pessoal (13º, férias, encargos)",
                         amount: -(folhaPagamento * (0.0833 + 0.1111 + 0.28)),
-                        percentage: ((folhaPagamento * (0.0833 + 0.1111 + 0.28)) / receita) * 100,
+                        percentage: parseFloat(safeFixed0((folhaPagamento * (0.0833 + 0.1111 + 0.28)), receita))
                       },
                       {
                         title: "Manutenção Veículos",
                         amount: -custoVeiculos,
-                        percentage: (custoVeiculos / receita) * 100,
+                        percentage: parseFloat(safeFixed0(custoVeiculos, receita))
                       },
                       {
                         title: "Garantia Serviços",
                         amount: -despesaGarantia,
-                        percentage: (despesaGarantia / receita) * 100,
+                        percentage: parseFloat(safeFixed0(despesaGarantia, receita))
                       },
                     ]}
                   />
@@ -654,18 +827,18 @@ export default function SimuladorFinanceiro() {
                   <ExpandableRow
                     title="Total de Depreciações"
                     amount={-totalDepreciacoes}
-                    percentage={(totalDepreciacoes / receita) * 100}
+                    percentage={parseFloat(safeFixed0(totalDepreciacoes, receita))}
                     className="text-red-600"
                     details={[
                       {
                         title: "Depreciação Ativo Imobilizado",
                         amount: -depreciacaoAtivo,
-                        percentage: (depreciacaoAtivo / receita) * 100,
+                        percentage: parseFloat(safeFixed0(depreciacaoAtivo, receita))
                       },
                       {
                         title: "Depreciação Veículos",
                         amount: -depreciacaoVeiculos,
-                        percentage: (depreciacaoVeiculos / receita) * 100,
+                        percentage: parseFloat(safeFixed0(depreciacaoVeiculos, receita))
                       },
                     ]}
                   />
@@ -674,13 +847,13 @@ export default function SimuladorFinanceiro() {
                   <ExpandableRow
                     title="Custo de Oportunidade"
                     amount={-custoCapital}
-                    percentage={(custoCapital / receita) * 100}
+                    percentage={parseFloat(safeFixed0(custoCapital, receita))}
                     className="text-red-600"
                     details={[
                       {
                         title: "Capital Investido",
                         amount: -valorInvestido,
-                        percentage: (valorInvestido / receita) * 100,
+                        percentage: parseFloat(safeFixed0(valorInvestido, receita))
                       },
                     ]}
                   />
@@ -688,17 +861,21 @@ export default function SimuladorFinanceiro() {
               </table>
               <ResultSection
                 value={resultadoFinal}
-                percentage={(resultadoFinal / receita) * 100}
+                percentage={
+                  isFinite(resultadoFinal) && isFinite(receita) && receita !== 0
+                    ? (resultadoFinal / receita) * 100
+                    : 0
+                }
                 isPositive={resultadoFinal >= 0}
               />
             </div>
           </div>
         </CollapsibleCard>
 
-        {/* Indicadores finais */}
+        {/* Indicadores finais (mantidos) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mt-6">
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Custos Variáveis: são os gastos que variam conforme o volume de vendas ou produção."
             onClick={() =>
               alert(
@@ -708,12 +885,12 @@ export default function SimuladorFinanceiro() {
           >
             <p className="text-sm text-gray-500">CV</p>
             <p className="text-xl font-bold text-red-600">
-              {((custos / receita) * 100).toFixed(0)}%
+              {safeFixed0(custos, receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(custos)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Margem de Contribuição: diferença entre a receita e os custos variáveis."
             onClick={() =>
               alert(
@@ -722,13 +899,17 @@ export default function SimuladorFinanceiro() {
             }
           >
             <p className="text-sm text-gray-500">MC</p>
-            <p className={`text-xl font-bold ${margemOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {(((receita - custos) / receita) * 100).toFixed(0)}%
+            <p
+              className={`text-xl font-bold ${
+                margemOriginal >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {safeFixed0((receita - custos), receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(margemOriginal)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Despesas Fixas: gastos que não variam com o volume de vendas, como aluguel e salários."
             onClick={() =>
               alert(
@@ -738,12 +919,12 @@ export default function SimuladorFinanceiro() {
           >
             <p className="text-sm text-gray-500">DF</p>
             <p className="text-xl font-bold text-red-600">
-              {((despesas / receita) * 100).toFixed(0)}%
+              {safeFixed0(despesas, receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(despesas)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Lucro Operacional Antes dos Investimentos: lucro antes de considerar os investimentos realizados."
             onClick={() =>
               alert(
@@ -752,13 +933,17 @@ export default function SimuladorFinanceiro() {
             }
           >
             <p className="text-sm text-gray-500">LOAI</p>
-            <p className={`text-xl font-bold ${loaiOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {((loaiOriginal / receita) * 100).toFixed(0)}%
+            <p
+              className={`text-xl font-bold ${
+                loaiOriginal >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {safeFixed0(loaiOriginal, receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(loaiOriginal)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Investimentos: valores aplicados para expansão, melhoria ou inovação."
             onClick={() =>
               alert(
@@ -768,12 +953,12 @@ export default function SimuladorFinanceiro() {
           >
             <p className="text-sm text-gray-500">INV</p>
             <p className="text-xl font-bold text-red-600">
-              {((investimentos / receita) * 100).toFixed(0)}%
+              {safeFixed0(investimentos, receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(investimentos)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Lucro Operacional: resultado final após despesas e investimentos."
             onClick={() =>
               alert(
@@ -782,13 +967,17 @@ export default function SimuladorFinanceiro() {
             }
           >
             <p className="text-sm text-gray-500">LO</p>
-            <p className={`text-xl font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {((lucroOriginal / receita) * 100).toFixed(0)}%
+            <p
+              className={`text-xl font-bold ${
+                lucroOriginal >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {safeFixed0(lucroOriginal, receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(lucroOriginal)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Saídas Não Operacionais: despesas que não fazem parte da atividade principal da empresa."
             onClick={() =>
               alert(
@@ -801,7 +990,7 @@ export default function SimuladorFinanceiro() {
             <p className="text-sm text-gray-500">{formatCurrency(0)}</p>
           </div>
           <div
-            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-800 cursor-pointer"
+            className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Resultado Final: lucro após considerar todas as provisões, depreciações e custo de capital."
             onClick={() =>
               alert(
@@ -810,11 +999,33 @@ export default function SimuladorFinanceiro() {
             }
           >
             <p className="text-sm text-gray-500">RF</p>
-            <p className={`text-xl font-bold ${resultadoFinal >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {((resultadoFinal / receita) * 100).toFixed(0)}%
+            <p
+              className={`text-xl font-bold ${
+                resultadoFinal >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {safeFixed0(resultadoFinal, receita)}%
             </p>
             <p className="text-sm text-gray-500">{formatCurrency(resultadoFinal)}</p>
           </div>
+        </div>
+
+        {/* Botão "Gerar Diagnostico" (PDF) no final da página */}
+        <div className="flex justify-end mt-6">
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
+            onClick={() => {
+              // Acionamos o clique programático no PdfButton
+              const pdfBtn = document.getElementById('pdfButtonTrigger');
+              pdfBtn?.click();
+            }}
+          >
+            Gerar Diagnostico
+          </button>
+        </div>
+        {/* PdfButton "invisível", para acionarmos por JavaScript */}
+        <div className="hidden">
+          <PdfButton targetRef={diagnosticoRef} id="pdfButtonTrigger" />
         </div>
       </div>
     </>
