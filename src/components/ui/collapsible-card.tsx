@@ -12,7 +12,7 @@ export function CollapsibleCard({ title, children, showComparison = false }: Col
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <Card>
+    <Card className="collapsible-card">
       <div
         className="p-6 flex justify-between items-center cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}

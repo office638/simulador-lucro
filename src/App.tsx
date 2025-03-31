@@ -76,6 +76,12 @@ export default function SimuladorFinanceiro() {
     setDespesas(0);
     setInvestimentos(0);
   };
+// Variáveis de simulação (variação em %),para limpar campos
+  const handleClearSimulacao = () => {
+  setReceitaVar(0);
+  setCustosVar(0);
+  setDespesasVar(0);
+};
 
   // Variáveis de simulação (variação em %)
   const [receitaVar, setReceitaVar] = useState(0);
@@ -146,8 +152,9 @@ export default function SimuladorFinanceiro() {
   const depreciacaoVeiculos = (investimentoVeiculos * (taxaDepreciacaoVeiculos / 100)) / 12;
   const totalDepreciacoes = depreciacaoAtivo + depreciacaoVeiculos;
 
-  // Cálculo do Custo de Capital
-  const custoCapital = (valorInvestido * (taxaReferencia / 100)) / 12;
+  // Cálculo do Custo de Capital considerando todos os investimentos
+const valorTotalInvestido = valorInvestido + investimentoVeiculos + ativoImobilizado;
+const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
 
   // Resultado Final
   const resultadoFinal = lucroOriginal - totalProvisoes - totalDepreciacoes - custoCapital;
@@ -289,15 +296,17 @@ export default function SimuladorFinanceiro() {
       </button>
 
       {/* Container principal responsivo – o fundo é definido pelo body (branco) */}
-      <div
-        ref={diagnosticoRef}
-        className="p-4 sm:p-6 md:p-8 grid gap-6 max-w-5xl mx-auto text-black dark:text-white transition-colors"
-      >
+<div
+  ref={diagnosticoRef}
+  id="diagnostico-content"
+  className="p-4 sm:p-6 md:p-8 grid gap-6 max-w-5xl mx-auto text-black dark:text-white transition-colors print:text-black print:bg-white"
+>
+
         {/* Clareza Financeira (reorganizado/compacto) */}
         <CollapsibleCard title="Clareza financeira">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Bloco 1: Receita */}
-            <div className="bg-transparent dark:bg-zinc-80 p-4 rounded space-y-1">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded space-y-1">
               <p className="font-semibold">Receita</p>
               <p className="text-xl font-bold">
                 {formatCurrency(receita)}
@@ -305,7 +314,7 @@ export default function SimuladorFinanceiro() {
               <p className="text-xs">Média mensal</p>
             </div>
             {/* Bloco 2: Ponto de equilíbrio */}
-            <div className="bg-transparent dark:bg-zinc-80 p-4 rounded space-y-1">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded space-y-1">
               <p className="font-semibold">Ponto de equilíbrio</p>
               <p className="text-xl font-bold">
                 {formatCurrency((despesas + investimentos) / (1 - (custos / receita)))}
@@ -313,7 +322,7 @@ export default function SimuladorFinanceiro() {
               <p className="text-xs">Receita mínima para não ter prejuízo</p>
             </div>
             {/* Bloco 3: Lucro */}
-            <div className="bg-transparent dark:bg-zinc-80 p-4 rounded space-y-1">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded space-y-1">
               <p className="font-semibold">Lucro</p>
               <p className={`text-xl font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
                 {formatCurrency(lucroOriginal)}
@@ -345,20 +354,22 @@ export default function SimuladorFinanceiro() {
               </p>
             </div>
 
-            {/* Botão para limpar todos os campos */}
-            <button
-              onClick={handleClearFields}
-              className="
-                px-4 py-2
-                rounded
-                font-semibold
-                transition-colors
-                bg-gray-200 hover:bg-gray-300 text-black
-                dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
-              "
-            >
-              Limpar Todos os Campos
-            </button>
+            <div className="flex justify-end">
+  {/* Botão para limpar todos os campos */}
+  <button
+    onClick={handleClearFields}
+    className="
+      px-4 py-2
+      rounded
+      font-semibold
+      transition-colors
+      bg-gray-200 hover:bg-gray-300 text-black
+      dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
+    "
+  >
+    Limpar Todos os Campos
+  </button>
+</div>
           </div>
         </CollapsibleCard>
 
@@ -383,25 +394,21 @@ export default function SimuladorFinanceiro() {
               <CurrencyInput value={investimentos} onChange={setInvestimentos} />
             </div>
           </div>
-          <div className="mt-4">
-            <button
-              onClick={handleClearResumoFields}
-              className="
-                px-4 py-2
-                rounded
-                font-semibold
-                transition-colors
-                
-                /* Modo claro */
-                bg-gray-200 hover:bg-gray-300 text-black
-                
-                /* Modo escuro */
-                dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
-              "
-            >
-              Limpar Campos
-            </button>
-          </div>
+          <div className="mt-4 flex justify-end">
+  <button
+    onClick={handleClearResumoFields}
+    className="
+      px-4 py-2
+      rounded
+      font-semibold
+      transition-colors
+      bg-gray-200 hover:bg-gray-300 text-black
+      dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
+    "
+  >
+    Limpar Campos
+  </button>
+</div>
           {/* Container da tabela: overflow horizontal apenas em telas pequenas */}
           <div className="overflow-x-auto md:overflow-x-visible max-w-full mt-6">
             <table className="w-full text-left border-separate border-spacing-y-2 border-spacing-x-2 sm:border-spacing-x-4 md:border-spacing-x-6">
@@ -487,85 +494,102 @@ export default function SimuladorFinanceiro() {
         </CollapsibleCard>
 
         {/* Simular alterações (%) */}
-        <CollapsibleCard title="Simular alterações (%)">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <Label>Receita</Label>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => adjustPercentage(receitaVar, -1, setReceitaVar)}
-                  className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
-                >
-                  <Minus size={16} />
-                </button>
-                <PercentageInput value={receitaVar} onChange={setReceitaVar} />
-                <button
-                  onClick={() => adjustPercentage(receitaVar, 1, setReceitaVar)}
-                  className="p-2 rounded bg-gray-1000 hover:bg-gray-200"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-              <p
-                className={`text-sm mt-1 font-bold ${
-                  impactoReceita >= 0 ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {formatCurrency(impactoReceita)}
-              </p>
-            </div>
-            <div>
-              <Label>Custos Variáveis</Label>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => adjustPercentage(custosVar, -1, setCustosVar)}
-                  className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
-                >
-                  <Minus size={16} />
-                </button>
-                <PercentageInput value={custosVar} onChange={setCustosVar} />
-                <button
-                  onClick={() => adjustPercentage(custosVar, 1, setCustosVar)}
-                  className="p-2 rounded bg-gray-1000 hover:bg-gray-9"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-              <p
-                className={`text-sm mt-1 font-bold ${
-                  impactoCustos >= 0 ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {formatCurrency(impactoCustos)}
-              </p>
-            </div>
-            <div>
-              <Label>Despesas Fixas</Label>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => adjustPercentage(despesasVar, -1, setDespesasVar)}
-                  className="p-2 rounded bg-gray-1000 hover:bg-gray-9"
-                >
-                  <Minus size={16} />
-                </button>
-                <PercentageInput value={despesasVar} onChange={setDespesasVar} />
-                <button
-                  onClick={() => adjustPercentage(despesasVar, 1, setDespesasVar)}
-                  className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-              <p
-                className={`text-sm mt-1 font-bold ${
-                  impactoDespesas >= 0 ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {formatCurrency(impactoDespesas)}
-              </p>
-            </div>
-          </div>
-        </CollapsibleCard>
+<CollapsibleCard title="Simular alterações (%)">
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div>
+      <Label>Receita</Label>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => adjustPercentage(receitaVar, -1, setReceitaVar)}
+          className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
+        >
+          <Minus size={16} />
+        </button>
+        <PercentageInput value={receitaVar} onChange={setReceitaVar} />
+        <button
+          onClick={() => adjustPercentage(receitaVar, 1, setReceitaVar)}
+          className="p-2 rounded bg-gray-1000 hover:bg-gray-200"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+      <p
+        className={`text-sm mt-1 font-bold ${
+          impactoReceita >= 0 ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {formatCurrency(impactoReceita)}
+      </p>
+    </div>
+    <div>
+      <Label>Custos Variáveis</Label>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => adjustPercentage(custosVar, -1, setCustosVar)}
+          className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
+        >
+          <Minus size={16} />
+        </button>
+        <PercentageInput value={custosVar} onChange={setCustosVar} />
+        <button
+          onClick={() => adjustPercentage(custosVar, 1, setCustosVar)}
+          className="p-2 rounded bg-gray-1000 hover:bg-gray-9"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+      <p
+        className={`text-sm mt-1 font-bold ${
+          impactoCustos >= 0 ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {formatCurrency(impactoCustos)}
+      </p>
+    </div>
+    <div>
+      <Label>Despesas Fixas</Label>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => adjustPercentage(despesasVar, -1, setDespesasVar)}
+          className="p-2 rounded bg-gray-1000 hover:bg-gray-9"
+        >
+          <Minus size={16} />
+        </button>
+        <PercentageInput value={despesasVar} onChange={setDespesasVar} />
+        <button
+          onClick={() => adjustPercentage(despesasVar, 1, setDespesasVar)}
+          className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+      <p
+        className={`text-sm mt-1 font-bold ${
+          impactoDespesas >= 0 ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {formatCurrency(impactoDespesas)}
+      </p>
+    </div>
+  </div>
+  {/* Adicionar o botão Limpar Campos */}
+  <div className="mt-4 flex justify-end">
+    <button
+      onClick={handleClearSimulacao}
+      className="
+        px-4 py-2
+        rounded
+        font-semibold
+        transition-colors
+        bg-gray-200 hover:bg-gray-300 text-black
+        dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
+      "
+    >
+      Limpar Campos
+    </button>
+  </div>
+</CollapsibleCard>
+
 
         {/* Resumo do Fluxo de Caixa após as Alterações */}
         <CollapsibleCard title="Resumo do Fluxo de Caixa após as Alterações">
@@ -844,19 +868,30 @@ export default function SimuladorFinanceiro() {
                   />
 
                   {/* ExpandableRow - Custo de Oportunidade */}
-                  <ExpandableRow
-                    title="Custo de Oportunidade"
-                    amount={-custoCapital}
-                    percentage={parseFloat(safeFixed0(custoCapital, receita))}
-                    className="text-red-600"
-                    details={[
-                      {
-                        title: "Capital Investido",
-                        amount: -valorInvestido,
-                        percentage: parseFloat(safeFixed0(valorInvestido, receita))
-                      },
-                    ]}
-                  />
+<ExpandableRow
+  title="Custo de Oportunidade"
+  amount={-custoCapital}
+  percentage={parseFloat(safeFixed0(custoCapital, receita))}
+  className="text-red-600"
+  details={[
+    {
+      title: "Capital em Estoque e Outros",
+      amount: -valorInvestido,
+      percentage: parseFloat(safeFixed0(valorInvestido, receita))
+    },
+    {
+      title: "Investimento em Veículos",
+      amount: -investimentoVeiculos,
+      percentage: parseFloat(safeFixed0(investimentoVeiculos, receita))
+    },
+    {
+      title: "Ativo Imobilizado",
+      amount: -ativoImobilizado,
+      percentage: parseFloat(safeFixed0(ativoImobilizado, receita))
+    }
+  ]}
+/>
+
                 </tbody>
               </table>
               <ResultSection
@@ -1011,10 +1046,10 @@ export default function SimuladorFinanceiro() {
         </div>
 
         {/* Botão "Gerar Diagnostico" (PDF) no final da página */}
-        <div className="flex justify-end mt-6">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-            onClick={() => {
+<div className="flex justify-end mt-6">
+  <button
+    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2"
+    onClick={() => {
               // Acionamos o clique programático no PdfButton
               const pdfBtn = document.getElementById('pdfButtonTrigger');
               pdfBtn?.click();
