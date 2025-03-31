@@ -659,7 +659,7 @@ export default function SimuladorFinanceiro() {
         </CollapsibleCard>
 
         {/* Provisões, Depreciações e Custo de Capital */}
-        <CollapsibleCard title="">
+        <CollapsibleCard title="Provisões, Depreciações e Custo de Capital">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">Provisões, Depreciações e Custo de Capital</h2>
             <div className="flex gap-2 mt-4 md:mt-0">
