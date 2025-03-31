@@ -8,7 +8,7 @@ import { CollapsibleCard } from "./components/ui/collapsible-card";
 import { PieChartComponent, BarChartComponent } from "./components/ui/charts";
 import { PdfButton } from "./components/ui/pdf-button";
 import { ResultSection } from "./components/ui/result-section";
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Moon, Sun } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { ExpandableRow } from "./components/ui/expandable-row"; // deve gerar 3 colunas
 
@@ -20,7 +20,7 @@ const formatCurrency = (value: number) =>
 export default function SimuladorFinanceiro() {
   const diagnosticoRef = useRef<HTMLDivElement>(null);
 
-  // Estado para dark mode
+  // Estado para dark mode com ícones de Lua/Sol
   const [darkMode, setDarkMode] = useState(false);
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -177,13 +177,22 @@ export default function SimuladorFinanceiro() {
 
   return (
     <>
-      {/* Botão fixo para alternar dark mode */}
-      <button
-        onClick={() => setDarkMode(!darkMode)}
-        className="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md dark-mode-transition"
-      >
-        {darkMode ? "Modo Claro" : "Modo Escuro"}
-      </button>
+      {/* Botão fixo para alternar dark mode com ícones */}
+     <button
+  onClick={() => setDarkMode(!darkMode)}
+  className="
+    fixed top-4 right-4 z-50 p-2 rounded shadow-md
+    bg-white dark:bg-zinc-800
+    hover:bg-gray-100 dark:hover:bg-zinc-700
+    transition-colors
+  "
+>
+  {darkMode ? (
+    <Sun className="w-5 h-5 text-yellow-400" />
+  ) : (
+    <Moon className="w-5 h-5 text-blue-400" />
+  )}
+</button>
 
       {/* Container principal responsivo – o fundo é definido pelo body (branco) */}
       <div
@@ -193,51 +202,53 @@ export default function SimuladorFinanceiro() {
         {/* Clareza Financeira */}
         <CollapsibleCard title="Clareza financeira">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Diagnóstico do ISF</h2>
+          <h2 className="text-xl font-bold text-gray-9 dark:text-gray-1000">Diagnóstico do ISF</h2>
             <PdfButton targetRef={diagnosticoRef} />
           </div>
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-500">Receita</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-gray-9 dark:text-gray-1000">Receita</p>
+                <p className="text-xl font-bold text-gray-9 dark:text-gray-1000">
                   {formatCurrency(receita)}
                 </p>
-                <p className="text-xs text-gray-500">Média mensal</p>
+                <p className="text-xs text-gray-9 dark:text-gray-1000">Média mensal</p>
               </div>
               <div>
-                <p className="text-gray-500">Ponto de equilíbrio</p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-gray-9 dark:text-gray-1000">Ponto de equilíbrio</p>
+                <p className="text-xl font-bold text-gray-9 dark:text-gray-1000">
                   {formatCurrency((despesas + investimentos) / (1 - (custos / receita)))}
                 </p>
               </div>
             </div>
-            <div className="mt-4">
-              <p className="text-gray-500">Lucro</p>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                <p className={`text-xl font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatCurrency(lucroOriginal)}
-                </p>
-                <div className="text-right mt-2 sm:mt-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Label>Ideal (%)</Label>
-                    <input
-                      type="number"
-                      className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-16 bg-white text-black"
-                      value={idealPercentual}
-                      onChange={(e) => setIdealPercentual(Number(e.target.value))}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Ideal: acima de {idealPercentual}%
-                  </p>
-                  <p className={`text-xl font-bold ${Number(lucroPercentual) >= idealPercentual ? "text-green-600" : "text-red-600"}`}>
-                    {lucroPercentual}%
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4">
+          <div className="mt-4">
+  <div className="flex flex-col">
+    <p className="text-gray-500 mb-1">Lucro</p>
+    <p className={`text-xl font-bold ${lucroOriginal >= 0 ? "text-green-600" : "text-red-600"}`}>
+      {formatCurrency(lucroOriginal)}
+    </p>
+  </div>
+  <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end mt-2">
+    <div className="text-right">
+      <div className="flex items-center gap-2 mb-1 justify-end">
+        <Label>Ideal (%)</Label>
+        <input
+          type="number"
+          className="border border-gray-300 dark:border-gray-700 rounded px-2 py-1 w-16 bg-white text-black"
+          value={idealPercentual}
+          onChange={(e) => setIdealPercentual(Number(e.target.value))}
+        />
+      </div>
+      <p className="text-sm text-gray-500">
+        Ideal: acima de {idealPercentual}%
+      </p>
+      <p className={`text-xl font-bold ${Number(lucroPercentual) >= idealPercentual ? "text-green-600" : "text-red-600"}`}>
+        {lucroPercentual}%
+      </p>
+    </div>
+  </div>
+</div>
+            <div className="mt-2">
               <p className="text-sm font-semibold">Índice de saúde financeira</p>
               <div className="flex items-center gap-2 mt-1">
                 <div className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-sm">
@@ -287,66 +298,58 @@ export default function SimuladorFinanceiro() {
                 <tr>
                   <td>Receita</td>
                   <td className="text-right pr-2 sm:pr-6 text-green-600 font-bold">
-                    {formatCurrency(receita)}
+                    {formatCurrency(receitaNova)}
                   </td>
                   <td className="text-right pr-2 sm:pr-6">100.0%</td>
-                  <td className="text-right pr-2 sm:pr-6">0.0%</td>
+                  <td className="text-right pr-2 sm:pr-6">{diferenca(receitaNova, receita)}%</td>
                 </tr>
                 <tr>
                   <td>Custos variáveis</td>
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
-                    {formatCurrency(-custos)}
+                    {formatCurrency(-custosNovos)}
                   </td>
                   <td className="text-right pr-2 sm:pr-6">
-                    {(-((custos / receita) * 100)).toFixed(1)}%
+                    {(-Number(percentual(custosNovos))).toFixed(1)}%
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">0.0%</td>
+                  <td className="text-right pr-2 sm:pr-6">{diferenca(custosNovos, custos)}%</td>
                 </tr>
                 <tr>
                   <td>Margem de contribuição</td>
                   <td className="text-right pr-2 sm:pr-6 text-green-600">
-                    {formatCurrency(receita - custos)}
+                    {formatCurrency(margemNova)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">
-                    {(((receita - custos) / receita) * 100).toFixed(1)}%
-                  </td>
-                  <td className="text-right pr-2 sm:pr-6">0.0%</td>
+                  <td className="text-right pr-2 sm:pr-6">{Number(percentual(margemNova))}%</td>
+                  <td className="text-right pr-2 sm:pr-6">{diferenca(margemNova, margemOriginal)}%</td>
                 </tr>
                 <tr>
                   <td>Despesas fixas</td>
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
-                    {formatCurrency(-despesas)}
+                    {formatCurrency(-despesasNovas)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">
-                    {(-((despesas / receita) * 100)).toFixed(1)}%
-                  </td>
-                  <td className="text-right pr-2 sm:pr-6">0.0%</td>
+                  <td className="text-right pr-2 sm:pr-6">{(-Number(percentual(despesasNovas))).toFixed(1)}%</td>
+                  <td className="text-right pr-2 sm:pr-6">{diferenca(despesasNovas, despesas)}%</td>
                 </tr>
                 <tr>
                   <td>LOAI</td>
                   <td className="text-right pr-2 sm:pr-6">
-                    {formatCurrency(margemOriginal - despesas)}
+                    {formatCurrency(loaiNovo)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">
-                    {(((margemOriginal - despesas) / receita) * 100).toFixed(1)}%
-                  </td>
-                  <td className="text-right pr-2 sm:pr-6">0.0%</td>
+                  <td className="text-right pr-2 sm:pr-6">{Number(percentual(loaiNovo))}%</td>
+                  <td className="text-right pr-2 sm:pr-6">{diferenca(loaiNovo, loaiOriginal)}%</td>
                 </tr>
                 <tr>
                   <td>Investimentos</td>
                   <td className="text-right pr-2 sm:pr-6 text-red-600">
                     {formatCurrency(-investimentos)}
                   </td>
-                  <td className="text-right pr-2 sm:pr-6">
-                    {(-((investimentos / receita) * 100)).toFixed(1)}%
-                  </td>
+                  <td className="text-right pr-2 sm:pr-6">{(-Number(percentual(investimentos))).toFixed(1)}%</td>
                   <td className="text-right pr-2 sm:pr-6">0.0%</td>
                 </tr>
                 <tr className={lucroOriginal >= 0 ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
                   <td>Lucro operacional</td>
-                  <td className="text-right pr-2 sm:pr-6">{formatCurrency(lucroOriginal)}</td>
-                  <td className="text-right pr-2 sm:pr-6">{((lucroOriginal / receita) * 100).toFixed(1)}%</td>
-                  <td className="text-right pr-2 sm:pr-6">0.0%</td>
+                  <td className="text-right pr-2 sm:pr-6">{formatCurrency(lucroNovo)}</td>
+                  <td className="text-right pr-2 sm:pr-6">{Number(percentual(lucroNovo))}%</td>
+                  <td className="text-right pr-2 sm:pr-6">{diferencaLucro}%</td>
                 </tr>
               </tbody>
             </table>
@@ -361,14 +364,14 @@ export default function SimuladorFinanceiro() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => adjustPercentage(receitaVar, -1, setReceitaVar)}
-                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                  className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
                 >
                   <Minus size={16} />
                 </button>
                 <PercentageInput value={receitaVar} onChange={setReceitaVar} />
                 <button
                   onClick={() => adjustPercentage(receitaVar, 1, setReceitaVar)}
-                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                  className="p-2 rounded bg-gray-1000 hover:bg-gray-200"
                 >
                   <Plus size={16} />
                 </button>
@@ -382,14 +385,14 @@ export default function SimuladorFinanceiro() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => adjustPercentage(custosVar, -1, setCustosVar)}
-                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                  className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
                 >
                   <Minus size={16} />
                 </button>
                 <PercentageInput value={custosVar} onChange={setCustosVar} />
                 <button
                   onClick={() => adjustPercentage(custosVar, 1, setCustosVar)}
-                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                  className="p-2 rounded bg-gray-1000 hover:bg-gray-9"
                 >
                   <Plus size={16} />
                 </button>
@@ -403,14 +406,14 @@ export default function SimuladorFinanceiro() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => adjustPercentage(despesasVar, -1, setDespesasVar)}
-                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                  className="p-2 rounded bg-gray-1000 hover:bg-gray-9"
                 >
                   <Minus size={16} />
                 </button>
                 <PercentageInput value={despesasVar} onChange={setDespesasVar} />
                 <button
                   onClick={() => adjustPercentage(despesasVar, 1, setDespesasVar)}
-                  className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                  className="p-2 rounded bg-gray-9 hover:bg-gray-1000"
                 >
                   <Plus size={16} />
                 </button>
@@ -421,12 +424,23 @@ export default function SimuladorFinanceiro() {
             </div>
           </div>
           <div className="mt-4">
-            <button
-              onClick={handleClearFields}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded font-semibold"
-            >
-              Limpar Campos
-            </button>
+           <button
+  onClick={handleClearFields}
+  className="
+    px-4 py-2
+    rounded
+    font-semibold
+    transition-colors
+
+    /* Modo claro */
+    bg-gray-200 hover:bg-gray-300 text-black
+
+    /* Modo escuro */
+    dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
+  "
+>
+  Limpar Campos
+</button>
           </div>
         </CollapsibleCard>
 
