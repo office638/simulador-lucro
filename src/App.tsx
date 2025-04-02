@@ -297,9 +297,9 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
 
       {/* Container principal responsivo – o fundo é definido pelo body (branco) */}
 <div
-  ref={diagnosticoRef}
   id="diagnostico-content"
-  className="p-4 sm:p-6 md:p-8 grid gap-6 max-w-5xl mx-auto text-black dark:text-white transition-colors print:text-black print:bg-white"
+  ref={diagnosticoRef}
+  className="p-4 sm:p-6 md:p-8 grid gap-6 max-w-5xl mx-auto text-black dark:text-white transition-colors"
 >
 
         {/* Clareza Financeira (reorganizado/compacto) */}
@@ -376,24 +376,24 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
         {/* Resumo do Fluxo de Caixa do Período */}
         <CollapsibleCard title="Resumo do Fluxo de Caixa do Período">
           {/* (Mantemos exatamente todo o seu código dessa seção) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <Label>Receita</Label>
-              <CurrencyInput value={receita} onChange={setReceita} />
-            </div>
-            <div>
-              <Label>Custos Variáveis</Label>
-              <CurrencyInput value={custos} onChange={setCustos} />
-            </div>
-            <div>
-              <Label>Despesas Fixas</Label>
-              <CurrencyInput value={despesas} onChange={setDespesas} />
-            </div>
-            <div>
-              <Label>Investimentos</Label>
-              <CurrencyInput value={investimentos} onChange={setInvestimentos} />
-            </div>
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 grid-resumo">
+  <div>
+    <Label>Receita</Label>
+    <CurrencyInput value={receita} onChange={setReceita} />
+  </div>
+  <div>
+    <Label>Custos Variáveis</Label>
+    <CurrencyInput value={custos} onChange={setCustos} />
+  </div>
+  <div>
+    <Label>Despesas Fixas</Label>
+    <CurrencyInput value={despesas} onChange={setDespesas} />
+  </div>
+  <div>
+    <Label>Investimentos</Label>
+    <CurrencyInput value={investimentos} onChange={setInvestimentos} />
+  </div>
+</div>
           <div className="mt-4 flex justify-end">
   <button
     onClick={handleClearResumoFields}
@@ -495,7 +495,7 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
 
         {/* Simular alterações (%) */}
 <CollapsibleCard title="Simular alterações (%)">
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 grid-simulacao">
     <div>
       <Label>Receita</Label>
       <div className="flex items-center gap-2">
@@ -513,11 +513,7 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
           <Plus size={16} />
         </button>
       </div>
-      <p
-        className={`text-sm mt-1 font-bold ${
-          impactoReceita >= 0 ? "text-green-600" : "text-red-600"
-        }`}
-      >
+      <p className={`text-sm mt-1 font-bold ${impactoReceita >= 0 ? "text-green-600" : "text-red-600"}`}>
         {formatCurrency(impactoReceita)}
       </p>
     </div>
@@ -538,11 +534,7 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
           <Plus size={16} />
         </button>
       </div>
-      <p
-        className={`text-sm mt-1 font-bold ${
-          impactoCustos >= 0 ? "text-green-600" : "text-red-600"
-        }`}
-      >
+      <p className={`text-sm mt-1 font-bold ${impactoCustos >= 0 ? "text-green-600" : "text-red-600"}`}>
         {formatCurrency(impactoCustos)}
       </p>
     </div>
@@ -563,32 +555,13 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
           <Plus size={16} />
         </button>
       </div>
-      <p
-        className={`text-sm mt-1 font-bold ${
-          impactoDespesas >= 0 ? "text-green-600" : "text-red-600"
-        }`}
-      >
+      <p className={`text-sm mt-1 font-bold ${impactoDespesas >= 0 ? "text-green-600" : "text-red-600"}`}>
         {formatCurrency(impactoDespesas)}
       </p>
     </div>
   </div>
-  {/* Adicionar o botão Limpar Campos */}
-  <div className="mt-4 flex justify-end">
-    <button
-      onClick={handleClearSimulacao}
-      className="
-        px-4 py-2
-        rounded
-        font-semibold
-        transition-colors
-        bg-gray-200 hover:bg-gray-300 text-black
-        dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white
-      "
-    >
-      Limpar Campos
-    </button>
-  </div>
 </CollapsibleCard>
+
 
 
         {/* Resumo do Fluxo de Caixa após as Alterações */}
@@ -702,7 +675,7 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-6 grid-provisoes">
             {/* Provisões */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -908,7 +881,7 @@ const custoCapital = (valorTotalInvestido * (taxaReferencia / 100)) / 12;
         </CollapsibleCard>
 
         {/* Indicadores finais (mantidos) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mt-6 indicadores-finais">
           <div
             className="text-center p-4 rounded shadow bg-white dark:bg-zinc-80 cursor-pointer"
             title="Custos Variáveis: são os gastos que variam conforme o volume de vendas ou produção."
